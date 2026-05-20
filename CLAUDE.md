@@ -1,70 +1,39 @@
 # Project: free-claude-zai-setup
 
-Инструкции по установке free-claude-code + Z.AI + DeepSeek параллельно с обычным claude CLI. README покрывает macOS и Windows 11.
+Инструкции по запуску `claude` + Z.AI + DeepSeek параллельно. Эта ветка — **macOS**. Для Windows см. ветку `windows`.
 
-## Команды (macOS, актуально)
+## Текущее состояние (macOS, 2026-05-20)
 
-| Команда | Провайдер |
-|---------|-----------|
-| `claude` | Anthropic OAuth |
-| `claude-zai` | Z.AI (GLM-5.1), прямое подключение |
-| `claude-ds` | DeepSeek через fcc-server (:8082) |
+**Все три провайдера через прямые native Anthropic endpoint'ы. fcc-server удалён.**
 
-## DeepSeek / fcc-server (macOS, 2026-05-20)
+| Команда | Endpoint | Модели |
+|---------|----------|--------|
+| `claude` | OAuth Anthropic | Claude 4.x |
+| `claude-zai` | `https://api.z.ai/api/anthropic` | OPUS/SONNET=`glm-5.1`, HAIKU=`glm-4.5-air` |
+| `claude-ds` | `https://api.deepseek.com/anthropic` | все тиры → `deepseek-v4-flash` |
 
-**Managed config:** `~/.fcc/.env` — именно здесь, проектный `.env` игнорируется.
-
-**Запуск fcc-server** (после перезагрузки или если упал):
-```bash
-cd /Users/andrej/projects/free-claude-code
-nohup fcc-server > /tmp/fcc-server-ds.log 2>&1 &
-# проверка:
-curl http://127.0.0.1:8082/health
-```
-
-**Ключевые настройки в `~/.fcc/.env`:**
-- `DEEPSEEK_API_KEY=sk-f9c532187ff04c89adf19810c8e67835`
-- `MODEL=deepseek/deepseek-v4-flash`, `MODEL_OPUS/SONNET=deepseek/deepseek-v4-pro`
-- `ENABLE_MODEL_THINKING=false` (и все THINKING=false) — DeepSeek не поддерживает Anthropic thinking, иначе 500 на `?beta=true`
-- `MESSAGING_PLATFORM=none`
-
-**Обёртка** `~/.local/bin/claude-ds`: сбрасывает OAuth токены, `ANTHROPIC_API_KEY=freecc`, `ANTHROPIC_BASE_URL=http://127.0.0.1:8082`, запускает `claude --bare`.
-
-## Текущее состояние (Windows, 2026-05-20)
-
-**Подключение прямое к Z.AI, без прокси.** fcc-server отключён — он конвертирует Anthropic→OpenAI и теряет structured-outputs/tool-use fidelity на `claude-cli/2.1.145`+, что вызывает `Provider API request failed` на запросах с `output_config`/`tools` (особенно с не-латинским prompt).
-
-- Обёртка: `C:\Users\user\.local\bin\claude-zai.ps1` + `claude-zai.cmd`
-- Endpoint: `https://api.z.ai/api/anthropic` (native Anthropic API от Z.AI)
-- Auth: `ANTHROPIC_AUTH_TOKEN` (не `API_KEY`!) — ключ pay-per-token
-- Модели: OPUS/SONNET=`glm-5.1`, HAIKU=`glm-4.5-air`
-- `API_TIMEOUT_MS=3000000` обязательно — GLM-5.1 «думает» 15-20с
-- Claude CLI: `C:\Users\user\AppData\Roaming\npm\claude.ps1`, 2.1.145, запуск через `claude --bare`
+Обёртки: `~/.local/bin/claude-{zai,ds}`. Каждая делает `unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL`, ставит `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_BASE_URL` + маппинг моделей + `API_TIMEOUT_MS=3000000`, затем `exec claude --bare "$@"`.
 
 ## Жёсткие правила
 
-- **Не использовать fcc-server для Z.AI** — даёт `Provider API request failed` на запросах с `output_config`/`tools[]`/`thinking` (`claude-cli/2.1.145`+). Прямой Anthropic-эндпоинт Z.AI работает корректно.
-- **`fcc-claude` не использовать** — OAuth из системного credential store (Keychain/Credential Manager) перебивает токен и возвращает 401. Только `claude --bare` через обёртку.
-- **В обёртке очищать `ANTHROPIC_API_KEY` и `ANTHROPIC_MODEL`** перед установкой `AUTH_TOKEN` — иначе OAuth из Credential Manager перебивает.
-- **Подписка GLM Coding Plan не нужна** — pay-per-token ключ работает с native Anthropic endpoint.
+- **Не использовать fcc-server.** Конвертирует Anthropic→OpenAI, ломает `tools[]`/`output_config`/MCP на `claude-cli/2.1.145+`: Z.AI отвечал `Provider API request failed`, DeepSeek — `Invalid request sent to provider`. Native endpoint провайдера принимает запросы напрямую.
+- **`fcc-claude` не использовать** — OAuth из Keychain перебивает токен → 401. Только `claude --bare` через обёртку.
+- **В обёртке очищать `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_MODEL`** перед установкой нового токена.
+- **`ANTHROPIC_AUTH_TOKEN`, не `API_KEY`** — оба провайдера требуют именно `AUTH_TOKEN`.
+- **Подписки не нужны** — pay-per-token ключи Z.AI и DeepSeek работают с native Anthropic endpoint.
 
-## Устаревшее (не использовать)
+## Удалено (если кто-то будет восстанавливать — не надо)
 
-- `fcc-server` на порту 8082 — отключён. Процесс убит, scheduled task `fcc-server-zai` остался (можно `schtasks /change /tn fcc-server-zai /disable` из admin).
-- `.env` в `C:\Users\user\projects\free-claude-code\.env` — больше не читается. Все 4 thinking-флага в нём = false, но это уже не имеет значения.
-- `LOG_RAW_API_PAYLOADS` / `LOG_RAW_SSE_EVENTS` — флаги fcc-server, не нужны.
-
-## Модели Z.AI (актуальный маппинг)
-
-- `glm-4.5-air` → MODEL (default) + MODEL_HAIKU
-- `glm-5.1` → MODEL_SONNET + MODEL_OPUS
+- `~/Library/LaunchAgents/com.fcc-server.zai.plist`
+- `~/.fcc/` (managed config fcc-server)
+- `~/projects/free-claude-code/` (клон upstream)
+- `uv tool free-claude-code` (бинари `fcc-server`, `fcc-claude`, `fcc-init`)
 
 ## Отладка
 
-- `$env:ANTHROPIC_LOG='debug'; claude-zai -p "..."` — покажет полный лог запросов/ответов claude CLI.
-- Admin endpoint `/admin/api/config` отдаёт текущую конфигурацию провайдеров и моделей с источником каждого поля (`explicit_env_file` / `template`).
-- При `LOG_RAW_API_PAYLOADS=true` + `LOG_RAW_SSE_EVENTS=true` в `.env` логи стримов попадают в stdout сервера.
+- `ANTHROPIC_LOG=debug claude-zai -p "..."` / `claude-ds -p "..."` — лог запросов и реальный endpoint.
+- Прямой ping провайдера: `curl https://api.deepseek.com/anthropic/v1/messages -H "x-api-key: $KEY" -H "anthropic-version: 2023-06-01" -d '{"model":"deepseek-v4-flash","max_tokens":30,"messages":[{"role":"user","content":"hi"}]}'`.
 
-## Не редактировать README
+## Не редактировать README в кросс-платформенном стиле
 
-README содержит ОБА раздела — macOS оригинальный + Windows 11 (добавлен 2026-05-20). При обновлении инструкции — править соответствующий раздел, второй не трогать.
+Эта ветка — только macOS. Windows-инструкция живёт в ветке `windows`.

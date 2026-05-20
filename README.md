@@ -1,6 +1,6 @@
 # free-claude-zai-setup — macOS
 
-Инструкция по запуску двух `claude` параллельно на macOS: один ходит к Anthropic, второй к [Z.AI](https://z.ai) (GLM) — **без прокси-сервера**.
+Инструкция по запуску трёх `claude` параллельно на macOS: Anthropic + [Z.AI](https://z.ai) (GLM) + [DeepSeek](https://deepseek.com) — **все три без прокси-сервера**.
 
 > Для Windows см. ветку [`windows`](../../tree/windows).
 
@@ -10,8 +10,9 @@
 |---------|-----------|--------|-------------|
 | `claude` | Anthropic | Claude 4.x | OAuth Pro (без изменений) |
 | `claude-zai` | Z.AI | GLM-5.1 / GLM-4.5-air | API-ключ Z.AI |
+| `claude-ds` | DeepSeek | deepseek-v4-flash | API-ключ DeepSeek |
 
-Оба запускаются из терминала и VS Code. Хуки, `.claude/settings.json` — общие. Бинарник один (`claude`) — `claude-zai` это обёртка с другими переменными окружения.
+Все запускаются из терминала и VS Code. Хуки, `.claude/settings.json` — общие. Бинарник один (`claude`) — обёртки только меняют переменные окружения.
 
 ## Как это работает
 
@@ -51,6 +52,26 @@ EOF
 chmod +x ~/.local/bin/claude-zai
 ```
 
+### 1b. Создать обёртку claude-ds (DeepSeek)
+
+```bash
+cat > ~/.local/bin/claude-ds << 'EOF'
+#!/usr/bin/env bash
+set -e
+unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL
+export ANTHROPIC_AUTH_TOKEN='ВАШ_КЛЮЧ_DEEPSEEK'
+export ANTHROPIC_BASE_URL='https://api.deepseek.com/anthropic'
+export ANTHROPIC_DEFAULT_OPUS_MODEL='deepseek-v4-flash'
+export ANTHROPIC_DEFAULT_SONNET_MODEL='deepseek-v4-flash'
+export ANTHROPIC_DEFAULT_HAIKU_MODEL='deepseek-v4-flash'
+export API_TIMEOUT_MS='3000000'
+exec claude --bare "$@"
+EOF
+chmod +x ~/.local/bin/claude-ds
+```
+
+DeepSeek поднимает нативный Anthropic endpoint на `https://api.deepseek.com/anthropic` — схема идентична Z.AI.
+
 ### 2. Добавить ~/.local/bin в PATH (если нет)
 
 ```bash
@@ -63,6 +84,7 @@ source ~/.zshrc
 ```bash
 claude -p "ответь одним словом: anthropic"
 claude-zai -p "какая ты модель? ответь кратко"
+claude-ds  -p "какая ты модель? ответь кратко"
 ```
 
 ## Модели Z.AI
@@ -88,13 +110,11 @@ ANTHROPIC_LOG=debug claude-zai -p "тест" 2>&1 | grep -E "baseUrl|api\.z\.ai"
 
 ## Миграция с fcc-server (если использовался ранее)
 
-Если до этого был настроен `fcc-server` через launchd:
+Если до этого был настроен `fcc-server` через launchd — теперь не нужен ни для Z.AI, ни для DeepSeek. Полная очистка:
 
 ```bash
-# Остановить и выгрузить LaunchAgent
-launchctl unload ~/Library/LaunchAgents/com.fcc-server.zai.plist
-
-# Заменить обёртку claude-zai (шаг 1 выше)
+launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.fcc-server.zai.plist 2>/dev/null || true
+rm -f ~/Library/LaunchAgents/com.fcc-server.zai.plist
+uv tool uninstall free-claude-code
+rm -rf ~/.fcc ~/projects/free-claude-code
 ```
-
-`uv`, `free-claude-code` и `.env` можно оставить или удалить — они больше не используются.

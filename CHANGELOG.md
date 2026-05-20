@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0] — 2026-05-20 (macOS)
+
+### Changed
+- macOS: `claude-ds` переведён на прямое подключение к `api.deepseek.com/anthropic` (native Anthropic endpoint DeepSeek)
+- CLAUDE.md / README.md / PROJECT_OVERVIEW.md переписаны под состояние без fcc-server
+
+### Removed
+- fcc-server, `~/.fcc/`, клон `free-claude-code`, uv tool `free-claude-code`, LaunchAgent `com.fcc-server.zai`
+
+### Why
+fcc-server конвертирует Anthropic→OpenAI и ломает `tools[]` / MCP на `claude-cli/2.1.145+`. Z.AI уже был переведён на прямое подключение; теперь и DeepSeek. После этого fcc-server не нужен ни одному провайдеру.
+
 ## [2.0.0] — 2026-05-20
 
 ### Changed
