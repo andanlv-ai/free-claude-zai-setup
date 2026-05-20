@@ -240,7 +240,164 @@ open http://127.0.0.1:8082/admin
 
 ---
 
-## 9. Ссылки
+## 9. Версии используемого ПО
+
+Снимок зафиксирован 2026-05-20 на рабочей машине. Для воспроизведения один-в-один
+другому ИИ/инженеру достаточно поднять эти же версии.
+
+### 9.1. Операционная система и железо
+
+| Компонент       | Версия                                       |
+|-----------------|----------------------------------------------|
+| macOS           | 26.4.1 (build 25E253)                        |
+| Kernel (Darwin) | 25.4.0 (xnu-12377.101.15~1 / RELEASE_ARM64_T8132) |
+| Архитектура     | `arm64` (Apple Silicon)                      |
+| Хост            | `Air-Andrej.fritz.box`                       |
+
+### 9.2. Системные shells и утилиты
+
+| Утилита   | Версия                                                          |
+|-----------|-----------------------------------------------------------------|
+| zsh       | 5.9 (arm64-apple-darwin25.0)                                    |
+| bash      | 3.2.57(1)-release (arm64-apple-darwin25) — системный            |
+| curl      | 8.7.1 (libcurl/8.7.1, SecureTransport, LibreSSL/3.3.6, nghttp2/1.68.0) |
+| git       | 2.50.1 (Apple Git-155)                                          |
+| Homebrew  | 5.1.12                                                          |
+| Node.js   | v25.7.0                                                         |
+| npm       | 11.14.1                                                         |
+
+### 9.3. Python / uv
+
+| Компонент              | Версия                                              |
+|------------------------|-----------------------------------------------------|
+| uv                     | 0.11.15 (3cffe97c2 2026-05-18, aarch64-apple-darwin)|
+| Python (системный)     | 3.9.6                                               |
+| Python (для fcc-server)| 3.14.0 (зафиксирован в `.python-version`)           |
+| pyproject `requires-python` | `>=3.14`                                       |
+
+### 9.4. Claude Code CLI
+
+| Компонент                  | Версия                                                |
+|----------------------------|-------------------------------------------------------|
+| `@anthropic-ai/claude-code` | 2.1.144 (установлен глобально через npm)             |
+| `claude --version`         | `2.1.144 (Claude Code)`                               |
+
+### 9.5. free-claude-code
+
+| Компонент             | Значение                                              |
+|-----------------------|-------------------------------------------------------|
+| Версия пакета         | `2.0.0` (из `pyproject.toml`)                         |
+| Git commit            | `54a9dc4e341e0591d48cabb83970bcde9e1ceff8`            |
+| Дата коммита          | 2026-05-18 13:51:56 -0700                             |
+| Сообщение             | `Update README voice section`                         |
+| Источник              | <https://github.com/Alishahryar1/free-claude-code>    |
+| Установлен через      | `uv tool install --force .`                           |
+| Префикс инсталляции   | `~/.local/share/uv/tools/free-claude-code/`           |
+| Бинари в `~/.local/bin/` | `fcc-server`, `fcc-claude`, `fcc-init`, `free-claude-code` |
+
+### 9.6. Python-зависимости free-claude-code (фактически установленные)
+
+Pinned через `uv.lock` upstream-репозитория, версии в работающем окружении:
+
+| Пакет                   | Версия       |
+|-------------------------|--------------|
+| fastapi                 | 0.136.1      |
+| fastapi-cloud-cli       | 0.17.1       |
+| starlette               | 1.0.0        |
+| uvicorn                 | 0.47.0       |
+| httpx                   | 0.28.1       |
+| httpcore                | 1.0.9        |
+| h11                     | 0.16.0       |
+| aiohttp                 | 3.13.5       |
+| websockets              | 16.0         |
+| requests                | 2.34.2       |
+| openai                  | 2.37.0       |
+| pydantic                | 2.13.4       |
+| pydantic-core           | 2.46.4       |
+| pydantic-settings       | 2.14.1       |
+| pydantic-extra-types    | 2.11.1       |
+| python-dotenv           | 1.2.2        |
+| python-telegram-bot     | 22.7         |
+| discord.py              | 2.7.1        |
+| tiktoken                | 0.13.0       |
+| loguru                  | 0.7.3        |
+| rich                    | 15.0.0       |
+| rich-toolkit            | 0.19.9       |
+| certifi                 | 2026.4.22    |
+| dnspython               | 2.8.0        |
+| email-validator         | 2.3.0        |
+| multidict               | 6.7.1        |
+| yarl                    | 1.23.0       |
+| propcache               | 0.5.2        |
+| python-multipart        | 0.0.29       |
+| socksio                 | 1.0.0        |
+| shellingham             | 1.5.4        |
+| sentry-sdk              | 2.60.0       |
+| markdown-it-py          | ≥4.2.0 (объявлено в pyproject) |
+
+Опциональные группы (НЕ устанавливались, т.к. `VOICE_NOTE_ENABLED=false` и
+`MESSAGING_PLATFORM=none`):
+- `voice` — `grpcio>=1.80.0`, `grpcio-tools>=1.80.0`, `nvidia-riva-client>=2.25.1`
+- `voice_local` — `torch>=2.12.0` + Hugging Face transformers Whisper
+
+### 9.7. Конфигурация запуска
+
+| Параметр                | Значение                                        |
+|-------------------------|-------------------------------------------------|
+| Порт fcc-server         | 8082                                            |
+| Bind address            | `0.0.0.0:8082` (доступен по `127.0.0.1:8082`)   |
+| Внутренний API-токен    | `freecc` (`ANTHROPIC_AUTH_TOKEN`)               |
+| Z.AI endpoint           | `https://api.z.ai/api/anthropic`                |
+| Менеджер процесса       | macOS `launchd` (LaunchAgent в `~/Library/LaunchAgents/`) |
+| Label LaunchAgent       | `com.fcc-server.zai`                            |
+
+### 9.8. Z.AI модели (на момент настройки)
+
+| Модель Z.AI     | Назначение                                  | Reasoning |
+|-----------------|---------------------------------------------|-----------|
+| `glm-5.1`       | Замена Opus/Sonnet                          | да (включено флагом) |
+| `glm-4.5-air`   | Замена Haiku и `MODEL` (fallback)           | нет       |
+
+---
+
+## 10. Воспроизведение с нуля (чек-лист для другого ИИ)
+
+```bash
+# 0. Предпосылки — должно совпадать с разделом 9.1–9.4
+#    macOS arm64, zsh, git, npm, uv 0.11.15+, Python 3.14 (через uv),
+#    Claude Code CLI 2.1.144 (npm i -g @anthropic-ai/claude-code).
+
+# 1. Клонировать free-claude-code на конкретный commit
+git clone https://github.com/Alishahryar1/free-claude-code.git \
+  ~/projects/free-claude-code
+cd ~/projects/free-claude-code
+git checkout 54a9dc4e341e0591d48cabb83970bcde9e1ceff8
+
+# 2. Установить как uv tool (Python 3.14 подтянется uv'ом по .python-version)
+uv tool install --force .
+
+# 3. Создать .env (см. раздел 4.3 — модели, ключ, токен)
+cp .env.example .env
+# отредактировать ZAI_API_KEY, MODEL_*, ANTHROPIC_AUTH_TOKEN=freecc,
+# MESSAGING_PLATFORM=none, VOICE_NOTE_ENABLED=false
+
+# 4. Создать обёртку claude-zai (раздел 4.1) — chmod +x
+
+# 5. Создать LaunchAgent (раздел 4.2) и загрузить:
+launchctl load ~/Library/LaunchAgents/com.fcc-server.zai.plist
+
+# 6. Проверки
+launchctl list | grep fcc-server          # должен быть PID
+curl -s http://127.0.0.1:8082/health      # {"status":"healthy"}
+claude-zai -p "тест"                       # ответ от GLM
+```
+
+Если версии Python/пакетов в окружении совпадают с разделами 9.3 и 9.6, поведение
+прокси будет идентичным.
+
+---
+
+## 11. Ссылки
 
 - Upstream: <https://github.com/Alishahryar1/free-claude-code>
 - Z.AI docs: <https://docs.z.ai/devpack/tool/claude>
