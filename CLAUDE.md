@@ -10,7 +10,7 @@
 |---------|----------|--------|
 | `claude` | OAuth Anthropic | Claude 4.x |
 | `claude-zai` | `https://api.z.ai/api/anthropic` | OPUS/SONNET=`glm-5.1`, HAIKU=`glm-4.5-air` |
-| `claude-ds` | `https://api.deepseek.com/anthropic` | все тиры → `deepseek-v4-flash` |
+| `claude-ds` | `https://api.deepseek.com/anthropic` | OPUS/SONNET=`deepseek-v4-pro`, HAIKU=`deepseek-v4-flash` |
 
 Обёртки: `~/.local/bin/claude-{zai,ds}`. Каждая делает `unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL`, ставит `ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_BASE_URL` + маппинг моделей + `API_TIMEOUT_MS=3000000`, затем `exec claude --bare "$@"`.
 

@@ -10,7 +10,7 @@
 |---------|-----------|--------|-------------|
 | `claude` | Anthropic | Claude 4.x | OAuth Pro (без изменений) |
 | `claude-zai` | Z.AI | GLM-5.1 / GLM-4.5-air | API-ключ Z.AI |
-| `claude-ds` | DeepSeek | deepseek-v4-flash | API-ключ DeepSeek |
+| `claude-ds` | DeepSeek | deepseek-v4-pro / deepseek-v4-flash | API-ключ DeepSeek |
 
 Все запускаются из терминала и VS Code. Хуки, `.claude/settings.json` — общие. Бинарник один (`claude`) — обёртки только меняют переменные окружения.
 
@@ -61,8 +61,8 @@ set -e
 unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_MODEL
 export ANTHROPIC_AUTH_TOKEN='ВАШ_КЛЮЧ_DEEPSEEK'
 export ANTHROPIC_BASE_URL='https://api.deepseek.com/anthropic'
-export ANTHROPIC_DEFAULT_OPUS_MODEL='deepseek-v4-flash'
-export ANTHROPIC_DEFAULT_SONNET_MODEL='deepseek-v4-flash'
+export ANTHROPIC_DEFAULT_OPUS_MODEL='deepseek-v4-pro'
+export ANTHROPIC_DEFAULT_SONNET_MODEL='deepseek-v4-pro'
 export ANTHROPIC_DEFAULT_HAIKU_MODEL='deepseek-v4-flash'
 export API_TIMEOUT_MS='3000000'
 exec claude --bare "$@"
