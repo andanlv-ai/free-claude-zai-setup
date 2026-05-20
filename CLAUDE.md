@@ -1,6 +1,34 @@
 # Project: free-claude-zai-setup
 
-Инструкции по установке free-claude-code + Z.AI параллельно с обычным claude CLI. README покрывает macOS и Windows 11.
+Инструкции по установке free-claude-code + Z.AI + DeepSeek параллельно с обычным claude CLI. README покрывает macOS и Windows 11.
+
+## Команды (macOS, актуально)
+
+| Команда | Провайдер |
+|---------|-----------|
+| `claude` | Anthropic OAuth |
+| `claude-zai` | Z.AI (GLM-5.1), прямое подключение |
+| `claude-ds` | DeepSeek через fcc-server (:8082) |
+
+## DeepSeek / fcc-server (macOS, 2026-05-20)
+
+**Managed config:** `~/.fcc/.env` — именно здесь, проектный `.env` игнорируется.
+
+**Запуск fcc-server** (после перезагрузки или если упал):
+```bash
+cd /Users/andrej/projects/free-claude-code
+nohup fcc-server > /tmp/fcc-server-ds.log 2>&1 &
+# проверка:
+curl http://127.0.0.1:8082/health
+```
+
+**Ключевые настройки в `~/.fcc/.env`:**
+- `DEEPSEEK_API_KEY=sk-f9c532187ff04c89adf19810c8e67835`
+- `MODEL=deepseek/deepseek-v4-flash`, `MODEL_OPUS/SONNET=deepseek/deepseek-v4-pro`
+- `ENABLE_MODEL_THINKING=false` (и все THINKING=false) — DeepSeek не поддерживает Anthropic thinking, иначе 500 на `?beta=true`
+- `MESSAGING_PLATFORM=none`
+
+**Обёртка** `~/.local/bin/claude-ds`: сбрасывает OAuth токены, `ANTHROPIC_API_KEY=freecc`, `ANTHROPIC_BASE_URL=http://127.0.0.1:8082`, запускает `claude --bare`.
 
 ## Текущее состояние (Windows, 2026-05-20)
 
